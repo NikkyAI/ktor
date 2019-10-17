@@ -7,6 +7,7 @@ package io.ktor.client.engine.js
 import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.http.content.*
+import io.ktor.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.io.*
 import kotlinx.io.core.*
@@ -35,6 +36,15 @@ internal suspend fun HttpRequestData.toRaw(callContext: CoroutineContext): Reque
         method = this@toRaw.method.value
         headers = jsHeaders
         redirect = RequestRedirect.FOLLOW
+        this@toRaw.attributes.getOrNull<String>(AttributeKey("credentials"))?.let {
+            credentials = when(it.toLowerCase()) {
+                "include" -> RequestCredentials.INCLUDE
+                "omit" -> RequestCredentials.OMIT
+                "same-origin" -> RequestCredentials.SAME_ORIGIN
+                else -> null
+            }
+
+        }
 
         bodyBytes?.let { body = Uint8Array(it.toTypedArray()) }
     }
